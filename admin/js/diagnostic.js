@@ -7,19 +7,41 @@ async function runDiagnostics() {
         console.log(`[${timestamp}] ${message}`);
         results.push({ timestamp, message, type });
     }
+
+    async function waitForCondition(condition, timeout = 5000) {
+        const start = Date.now();
+        while (!condition() && Date.now() - start < timeout) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return condition();
+    }
     
     try {
         log('🚀 Démarrage du diagnostic complet...', 'start');
         
         log('1️⃣ Vérification des dépendances...');
         
+        // Attendre que Supabase soit disponible
+        let attempts = 0;
+        while (typeof window.supabase === 'undefined' && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         if (typeof window.supabase === 'undefined') {
-            throw new Error('❌ Supabase SDK non chargé');
+            throw new Error('❌ Supabase SDK non chargé après 5 secondes d\'attente');
         }
         log('✅ Supabase SDK chargé');
         
+        // Attendre que SupabaseAPI soit disponible
+        attempts = 0;
+        while (typeof window.SupabaseAPI === 'undefined' && attempts < 50) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         if (typeof window.SupabaseAPI === 'undefined') {
-            throw new Error('❌ SupabaseAPI non disponible');
+            throw new Error('❌ SupabaseAPI non disponible après 5 secondes d\'attente');
         }
         log('✅ SupabaseAPI disponible');
         
@@ -49,39 +71,108 @@ async function runDiagnostics() {
         
         log('5️⃣ Vérification de l\'interface admin...');
         
-        const addButton = document.getElementById('addNewBtn');
-        if (!addButton) {
-            log('❌ Bouton ajouter non trouvé');
+        // Vérifier les éléments de l'interface
+        const addNewBtn = document.getElementById('addNewBtn');
+        if (!addNewBtn) {
+            log('❌ Bouton "Ajouter" non trouvé');
         } else {
-            log('✅ Bouton ajouter trouvé');
+            log('✅ Bouton "Ajouter" trouvé');
         }
         
-        const eventsTableBody = document.getElementById('eventsTableBody');
-        if (!eventsTableBody) {
-            log('❌ Table des événements non trouvée');
+        const eventsGrid = document.getElementById('eventsGrid');
+        if (!eventsGrid) {
+            log('❌ Grille des événements non trouvée');
         } else {
-            log('✅ Table des événements trouvée');
+            log('✅ Grille des événements trouvée');
+        }
+
+        const modal = document.getElementById('modal');
+        if (!modal) {
+            log('❌ Modal non trouvée');
+        } else {
+            log('✅ Modal trouvée');
         }
         
-        const eventsPage = document.getElementById('events-page');
-        if (!eventsPage) {
-            log('❌ Page événements non trouvée');
+        log('6️⃣ Test du gestionnaire d\'événements...');
+        
+        // Vérifier l'instance EventsManager et attendre son initialisation
+        const eventsManagerReady = await waitForCondition(() => {
+            return window.eventsManager?.initialized;
+        });
+
+        if (!window.eventsManager) {
+            log('❌ Instance EventsManager non trouvée');
         } else {
-            log('✅ Page événements trouvée');
+            log('✅ Instance EventsManager trouvée');
+
+            if (!eventsManagerReady) {
+                log('⚠️ EventsManager n\'est pas initialisé après 5 secondes');
+            } else {
+                log('✅ EventsManager est initialisé');
+            }
+
+            // Vérifier les méthodes essentielles
+            const requiredMethods = [
+                'showEventModal',
+                'createEvent',
+                'updateEvent',
+                'deleteEvent',
+                'loadEvents',
+                'renderEvents',
+                'renderEventCard'
+            ];
+
+            let missingMethods = [];
+            for (const method of requiredMethods) {
+                if (typeof window.eventsManager[method] !== 'function') {
+                    missingMethods.push(method);
+                }
+            }
+
+            if (missingMethods.length > 0) {
+                log(`❌ Méthodes manquantes dans EventsManager: ${missingMethods.join(', ')}`);
+            } else {
+                log('✅ Toutes les méthodes requises sont présentes dans EventsManager');
+            }
+
+            // Vérifier les événements chargés
+            if (!Array.isArray(window.eventsManager.events)) {
+                log('❌ La propriété events n\'est pas un tableau');
+            } else {
+                log(`✅ ${window.eventsManager.events.length} événements chargés dans EventsManager`);
+            }
         }
+
+        log('7️⃣ Test des filtres...');
         
-        log('6️⃣ Test des fonctions d\'événements...');
-        
-        if (typeof window.showEventModal === 'function') {
-            log('✅ showEventModal disponible');
+        const cityFilter = document.getElementById('cityFilter');
+        if (!cityFilter) {
+            log('❌ Filtre de ville non trouvé');
         } else {
-            log('❌ showEventModal non disponible');
+            log('✅ Filtre de ville trouvé');
         }
-        
-        if (typeof window.loadEventsTable === 'function') {
-            log('✅ loadEventsTable disponible');
+
+        const statusFilter = document.getElementById('statusFilter');
+        if (!statusFilter) {
+            log('❌ Filtre de statut non trouvé');
         } else {
-            log('❌ loadEventsTable non disponible');
+            log('✅ Filtre de statut trouvé');
+        }
+
+        const searchInput = document.getElementById('eventSearch');
+        if (!searchInput) {
+            log('❌ Champ de recherche non trouvé');
+        } else {
+            log('✅ Champ de recherche trouvé');
+        }
+
+        log('8️⃣ Test de la fonction de notification...');
+        
+        if (typeof window.showNotification !== 'function') {
+            log('❌ Fonction de notification non trouvée');
+        } else {
+            log('✅ Fonction de notification trouvée');
+            window.showNotification('Test de notification', 'success');
         }
         
         log('✅ Diagnostic terminé avec succès !', 'success');

@@ -1,0 +1,373 @@
+/* Styles modernes pour les formulaires */
+.modern-form {
+    --form-bg: #fff;
+    --input-bg: #f8f9fa;
+    --input-border: #dee2e6;
+    --input-focus: #FF7900;
+    --input-color: #495057;
+    --label-color: #6c757d;
+    --icon-color: #adb5bd;
+    --section-border: #e9ecef;
+}
+
+.modern-form .form-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--section-border);
+    border-radius: 8px;
+    background: var(--form-bg);
+}
+
+.modern-form .form-section h4 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modern-form .form-section h4 i {
+    color: var(--input-focus);
+}
+
+.modern-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Labels flottants */
+.floating-label {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.floating-label .form-control {
+    height: 3.125rem;
+    padding: 1rem 1rem 0.5rem 2.5rem;
+    font-size: 1rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background: var(--input-bg);
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+}
+
+.floating-label textarea.form-control {
+    height: auto;
+    min-height: 100px;
+    padding-top: 1.5rem;
+}
+
+.floating-label label {
+    position: absolute;
+    left: 2.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    color: var(--label-color);
+    pointer-events: none;
+    transition: all 0.2s ease-out;
+    padding: 0 0.25rem;
+    margin: 0;
+}
+
+.floating-label textarea ~ label {
+    top: 1.2rem;
+    transform: none;
+}
+
+.floating-label .form-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--icon-color);
+    transition: all 0.2s ease-in-out;
+}
+
+.floating-label textarea ~ .form-icon {
+    top: 1.2rem;
+    transform: none;
+}
+
+/* États des inputs */
+.floating-label .form-control:focus,
+.floating-label .form-control.has-value {
+    background: var(--form-bg);
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 2px rgba(255, 121, 0, 0.1);
+}
+
+.floating-label .form-control:focus ~ label,
+.floating-label .form-control.has-value ~ label {
+    top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--input-focus);
+    background: var(--form-bg);
+}
+
+.floating-label .form-control:focus ~ .form-icon {
+    color: var(--input-focus);
+}
+
+/* Upload d'images */
+.image-upload-zone {
+    border: 2px dashed var(--input-border);
+    border-radius: 8px;
+    padding: 1rem;
+    position: relative;
+    transition: all 0.2s ease;
+    min-height: 200px;
+}
+
+.image-upload-zone.drag-over {
+    border-color: var(--input-focus);
+    background: rgba(255, 121, 0, 0.05);
+}
+
+.file-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    cursor: pointer;
+}
+
+.file-upload input[type="file"] {
+    display: none;
+}
+
+.file-upload label {
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-content {
+    text-align: center;
+}
+
+.upload-content i {
+    font-size: 3rem;
+    color: var(--input-focus);
+    margin-bottom: 1rem;
+}
+
+.upload-content p {
+    color: var(--input-color);
+    margin-bottom: 0.5rem;
+}
+
+.upload-content small {
+    color: var(--label-color);
+}
+
+/* Aperçu d'image */
+.image-preview {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 300px;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.image-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.image-preview:hover .image-actions {
+    opacity: 1;
+}
+
+/* Barre de progression */
+.upload-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1rem;
+    text-align: center;
+}
+
+.progress-bar {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar > div {
+    height: 100%;
+    background: var(--input-focus);
+    border-radius: 2px;
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.875rem;
+    color: var(--label-color);
+}
+
+/* Actions du formulaire */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--section-border);
+}
+
+/* Boutons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--input-focus);
+    color: #fff;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #e66d00;
+}
+
+.btn-secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.btn-secondary:hover {
+    background: #e9ecef;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--input-focus);
+    color: var(--input-focus);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 121, 0, 0.1);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+/* Champs requis */
+.required {
+    color: #dc3545;
+    margin-left: 0.25rem;
+}
+
+/* Helper text */
+.form-help {
+    font-size: 0.75rem;
+    color: var(--label-color);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Modal/form polish specifically for event modal */
+.modal .modern-form {
+    padding: 1rem 1.25rem;
+}
+
+.modal .modern-form .form-section {
+    padding: 1rem;
+    margin-block-end: 1rem;
+}
+
+.modal .modern-form .form-section h4 {
+    margin-block-end: 0.75rem;
+}
+
+.image-preview-container img {
+    inline-size: 160px;
+    block-size: auto;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    display: block;
+}
+
+.image-preview-container {
+    margin-block-start: 0.5rem;
+}
+
+/* Tweak action buttons in modals to be more visible */
+.modal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-block-start: 0.75rem;
+    border-block-start: none;
+}
+
+.modal .btn-primary {
+    background: var(--input-focus);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(255, 121, 0, 0.12);
+}
+
+.modal .btn-secondary {
+    background: #fff;
+    border: 1px solid #e9ecef;
+}
+
+/* Small helpers for event/formation image previews inserted dynamically */
+#ev_currentImage img,
+#ev_imagePreview img,
+#formationImagePreviewImg,
+.image-preview img {
+    inline-size: 160px;
+    block-size: auto;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+#ev_imagePreview {
+    margin-block-start: 0.5rem;
+}

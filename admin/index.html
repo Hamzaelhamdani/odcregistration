@@ -7,47 +7,80 @@
     <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/events.css">
+    <link rel="stylesheet" href="css/placeholders.css">
+    <link rel="stylesheet" href="css/image-upload.css">
     
+        <!-- Chargement des scripts dans le bon ordre -->
+    <!-- 1. Librairie Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
+    <!-- 2. Variables d'environnement -->
     <script src="../env.js"></script>
-    <script src="../config/supabase.js"></script>
-    <script src="js/auth.js"></script>
-</head>
-<body style="display: none;">
     
-    <div id="authLoader" style="text-align: center; padding: 3rem; font-family: 'Open Sans', sans-serif;">
-        <i class="fas fa-shield-alt" style="font-size: 3rem; color: #FF7900; margin-bottom: 1rem;"></i>
-        <h2 style="color: #333;">Vérification des permissions...</h2>
-        <p style="color: #666;">Patientez pendant que nous vérifions votre authentification.</p>
-    </div>
+    <!-- 3. API Supabase -->
+    <script src="../config/supabase.js"></script>
+    
+    <!-- 4. Authentification -->
+    <script src="js/auth.js"></script>
+    
+    <!-- 5. Utilitaires -->
+    <script src="js/image-utils.js"></script>
+    
+        <!-- 6. Gestionnaires -->
+    <script src="js/image-handlers.js"></script>
+    <script src="js/form-handlers.js"></script>
+    <script src="js/add-handlers.js"></script>
+    <script src="js/events-manager.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-supabase.js"></script>
+    <script src="js/form-upload.js"></script>
+    <script src="js/image-zoom.js"></script>
+    <script src="js/init-admin.js"></script>
     
     <script>
-        // PROTECTION STRICTE - Bloquer l'accès par défaut
-        let authenticationPassed = false;
-        
-        // Protéger la page avant de charger le contenu
-        (async function() {
-            const loader = document.getElementById('authLoader');
-            
+        // Empêcher l'accès direct à la page sans authentification
+        document.addEventListener('DOMContentLoaded', async function() {
             try {
-                // Vérifier que les scripts d'authentification sont chargés
-                if (typeof protectAdminPage !== 'function') {
-                    throw new Error('Script d\'authentification non chargé');
+                const loader = document.getElementById('authLoader');
+                const mainContent = document.querySelector('.admin-layout');
+                
+                // Attendre que l'API Supabase soit initialisée
+                let attempts = 0;
+                while (!window.SupabaseAPI?.initialized && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                    console.log('⏳ Attente de Supabase...', attempts);
                 }
                 
-                console.log('🔐 Vérification de l\'authentification...');
-                const isAuthenticated = await protectAdminPage();
+                if (!window.SupabaseAPI?.initialized) {
+                    throw new Error('Timeout: Supabase non initialisé après 5 secondes');
+                }
                 
-                if (!isAuthenticated) {
-                    console.log('❌ Authentification échouée');
-                    loader.innerHTML = `
-                        <i class="fas fa-lock" style="font-size: 3rem; color: #dc3545; margin-bottom: 1rem;"></i>
-                        <h2 style="color: #dc3545;">Accès non autorisé</h2>
-                        <p style="color: #666;">Redirection vers la page de connexion...</p>
-                    `;
-                    // Redirection forcée
+                console.log('✅ Supabase est prêt à être utilisé');
+                
+                // Vérifier l'authentification
+                if (!window.authManager) {
+                    throw new Error('Le script d\'authentification n\'est pas chargé');
+                }
+                
+                // Vérifier la session stockée
+                const storedSession = localStorage.getItem('adminSession');
+                if (storedSession) {
+                    const { timestamp, email } = JSON.parse(storedSession);
+                    console.log('✓ Session trouvée pour:', email);
+                }
+                
+                // Si l'authentification est réussie, cacher le loader
+                if (!await window.authManager.requireAuth()) {
+                    if (loader) {
+                        loader.innerHTML = `
+                            <i class="fas fa-lock" style="font-size: 3rem; color: #dc3545; margin-block-end: 1rem;"></i>
+                            <h2 style="color: #dc3545; margin: 0;">Accès non autorisé</h2>
+                            <p style="color: #666; margin-block-start: 0.5rem;">Redirection vers la page de connexion...</p>
+                        `;
+                    }
                     setTimeout(() => {
                         window.location.href = 'login.html';
                     }, 2000);
@@ -55,35 +88,40 @@
                 }
                 
                 console.log('✅ Authentification réussie');
-                authenticationPassed = true;
                 
-                // Si authentifié, masquer le loader et afficher le contenu
-                loader.style.display = 'none';
-                document.body.style.display = 'block';
+                if (loader) loader.style.display = 'none';
+                if (mainContent) mainContent.style.visibility = 'visible';
                 
             } catch (error) {
-                console.error('❌ Erreur d\'authentification:', error);
-                loader.innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ffc107; margin-bottom: 1rem;"></i>
-                    <h2 style="color: #ffc107;">Erreur de sécurité</h2>
-                    <p style="color: #666;">Redirection vers la page de connexion...</p>
-                `;
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 3000);
-            }
-        })();
-        
-        // Protection supplémentaire - vérifier périodiquement
-        setInterval(() => {
-            if (!authenticationPassed) {
-                console.warn('⚠️ Tentative d\'accès non autorisé détectée');
+                console.error('❌ Erreur:', error);
+                console.log('⏳ Redirection vers login...');
                 window.location.href = 'login.html';
             }
-        }, 5000);
+        });
+    </script>
+</head>
+<body>
+    <div id="authLoader" style="position: fixed; inset-block: 0; inset-inline: 0; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Open Sans', sans-serif;">
+        <i class="fas fa-shield-alt" style="font-size: 3rem; color: #FF7900; margin-block-end: 1rem;"></i>
+        <h2 style="color: #333; margin: 0;">Vérification des permissions...</h2>
+        <p style="color: #666; margin-block-start: 0.5rem;">Patientez pendant que nous vérifions votre authentification.</p>
+    </div>
+    
+    <script>
+        // Ajouter un gestionnaire d'erreurs global
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('🚨 Erreur globale:', {
+                message: msg,
+                url: url,
+                line: lineNo,
+                column: columnNo,
+                error: error
+            });
+            return false;
+        };
     </script>
     
-    <div class="admin-layout">
+    <div class="admin-layout" style="visibility: hidden;">
         <nav class="sidebar">
             <div class="sidebar-header">
                 <div class="admin-logo">
@@ -122,7 +160,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link diagnostic-btn" onclick="runODCDiagnostics()" style="border: none; background: none; width: 100%; text-align: left; cursor: pointer; color: inherit; padding: 0.75rem 1.5rem;">
+                    <button class="nav-link diagnostic-btn" onclick="runODCDiagnostics()" style="border: none; background: none; inline-size: 100%; text-align: start; cursor: pointer; color: inherit; padding: 0.75rem 1.5rem;">
                         <i class="fas fa-stethoscope"></i>
                         <span>Diagnostic système</span>
                     </button>
@@ -274,90 +312,38 @@
 
                 
                 <div id="events-page" class="content-page">
-                    <!-- Header événements -->
-                    <div class="events-header">
-                        <h2>
-                            <i class="fas fa-calendar-alt"></i>
-                            Gestion des événements
-                        </h2>
-                        <div class="events-stats">
-                            <div class="events-stat">
-                                <div class="events-stat-number" id="totalEventsCount">0</div>
-                                <div class="events-stat-label">Total</div>
-                            </div>
-                            <div class="events-stat">
-                                <div class="events-stat-number" id="activeEventsCount">0</div>
-                                <div class="events-stat-label">Actifs</div>
-                            </div>
-                            <div class="events-stat">
-                                <div class="events-stat-number" id="upcomingEventsCount">0</div>
-                                <div class="events-stat-label">À venir</div>
-                            </div>
+                    <div class="section-header">
+                        <h2><i class="fas fa-calendar-alt"></i> Gestion des événements</h2>
+                        <button class="btn btn-primary" onclick="handleAddNew()">
+                            <i class="fas fa-plus"></i> Nouvel événement
+                        </button>
+                    </div>
+                    
+                    <div class="events-toolbar">
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="eventSearch" placeholder="Rechercher un événement...">
+                        </div>
+                        
+                        <div class="filters">
+                            <select id="cityFilter">
+                                <option value="">Toutes les villes</option>
+                                <option value="rabat">Rabat</option>
+                                <option value="agadir">Agadir</option>
+                                <option value="benmisk">Ben M'sik</option>
+                                <option value="sidimaarouf">Sidi Maarouf</option>
+                            </select>
+                            
+                            <select id="statusFilter">
+                                <option value="">Tous les statuts</option>
+                                <option value="active">Actifs</option>
+                                <option value="completed">Terminés</option>
+                                <option value="cancelled">Annulés</option>
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Filtres événements -->
-                    <div class="events-filters">
-                        <h4>
-                            <i class="fas fa-filter"></i>
-                            Filtres et recherche
-                        </h4>
-                        <div class="filter-row">
-                            <div class="form-group">
-                                <label for="searchEvents">Rechercher</label>
-                                <div class="search-bar">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" class="form-control" id="searchEvents" placeholder="Rechercher par titre, lieu...">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="eventsStatusFilter">Statut</label>
-                                <select class="form-control" id="eventsStatusFilter">
-                                    <option value="">Tous</option>
-                                    <option value="active">Actif</option>
-                                    <option value="inactive">Inactif</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="eventsCityFilter">Ville</label>
-                                <select class="form-control" id="eventsCityFilter">
-                                    <option value="">Toutes les villes</option>
-                                    <option value="rabat">Rabat</option>
-                                    <option value="agadir">Agadir</option>
-                                    <option value="benmisk">Ben M'sik</option>
-                                    <option value="sidimaarouf">Sidi Maarouf</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Grille des événements -->
-                    <div class="events-grid" id="eventsGrid">
-                        <!-- Les cartes d'événements seront générées ici -->
-                    </div>
-
-                    <!-- Vue tableau alternative -->
-                    <div class="data-table-container" id="eventsTableContainer" style="display: none;">
-                        <div class="table-header">
-                            <h3 class="table-title">Vue tableau</h3>
-                        </div>
-                        <table class="data-table" id="eventsTable">
-                            <thead>
-                                <tr>
-                                    <th>Titre</th>
-                                    <th>Date</th>
-                                    <th>Heure</th>
-                                    <th>Lieu</th>
-                                    <th>Participants</th>
-                                    <th>Statut</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="eventsTableBody">
-                                
-                            </tbody>
-                        </table>
-                    </div>
+                    <div id="eventsGrid" class="events-grid"></div>
                 </div>
 
                 
@@ -410,40 +396,99 @@
     
     <div id="modal" class="modal-overlay">
         <div class="modal">
-            <div class="modal-header">
-                <h3 id="modalTitle">Ajouter une formation</h3>
-                <button class="modal-close" id="modalClose">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle"></h3>
+                    <button id="modalClose" class="modal-close" onclick="closeModal()">×</button>
+                </div>
+                <div id="modalBody" class="modal-body"></div>
             </div>
         </div>
     </div>
 
-    
-    <script src="js/admin-supabase.js"></script>
     <script src="js/diagnostic.js"></script>
     
+    <script>
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
     
     <script>
-        // Attendre que l'authentification soit validée et que SupabaseAPI soit disponible
-        window.addEventListener('load', async function() {
-            // Vérifier que SupabaseAPI est disponible
-            if (window.SupabaseAPI) {
-                console.log('✅ SupabaseAPI disponible, initialisation du back office');
-                // L'initialisation se fait automatiquement dans admin-supabase.js
-            } else {
-                console.error('❌ SupabaseAPI non disponible');
-                // Essayer de charger manuellement
-                setTimeout(() => {
-                    if (typeof initializeDashboard === 'function') {
-                        initializeDashboard();
-                    }
-                }, 1000);
+        // Initialisation et réinitialisation de l'application
+        async function initializeApp() {
+            try {
+                console.log('🔄 Initialisation de l\'application...');
+                
+                // Attendre que l'API soit initialisée
+                let attempts = 0;
+                while (!window.SupabaseAPI?.initialized && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.SupabaseAPI?.initialized) {
+                    throw new Error('Timeout: API Supabase non initialisée');
+                }
+                
+                console.log('✅ Supabase est prêt');
+                
+                // Vérifier la connexion à la base de données
+                const { data, error } = await window.supabaseClient.from('formations').select('count');
+                if (error) throw error;
+                console.log('✅ Connexion à la base de données vérifiée');
+                
+                // Vérifier la session
+                const { data: { session }, error: sessionError } = 
+                    await window.supabaseClient.auth.getSession();
+                
+                if (sessionError || !session) {
+                    throw new Error('Session invalide');
+                }
+                
+                // Initialiser le dashboard si la fonction existe
+                if (typeof initializeDashboard === 'function') {
+                    console.log('🔄 Initialisation du dashboard...');
+                    await initializeDashboard();
+                }
+                
+                // Actualiser l'interface
+                if (typeof loadAllData === 'function') {
+                    console.log('🔄 Chargement des données...');
+                    await loadAllData();
+                }
+                
+                console.log('✅ Application initialisée avec succès');
+                
+            } catch (error) {
+                console.error('❌ Erreur d\'initialisation:', error);
+                if (error.message === 'Session invalide') {
+                    console.log('⏳ Redirection vers login...');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = 'Erreur: ' + error.message;
+                    errorMessage.style.display = 'block';
+                }
             }
-        });
+        }
+        
+        // Démarrer l'initialisation
+        initializeApp();
     </script>
 </body>
 </html>

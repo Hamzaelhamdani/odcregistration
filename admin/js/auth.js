@@ -3,30 +3,31 @@ class AuthManager {
         console.log('🔧 Initialisation AuthManager...');
         this.supabase = null;
         this.currentUser = null;
+        this.initialized = false;
         this.initializeWhenReady();
     }
 
     async initializeWhenReady() {
+        if (this.initialized) return;
+
         console.log('⏳ Attente du client Supabase...');
         
+        // Attendre que l'API soit initialisée
         let attempts = 0;
-        while (!window.supabaseClient && attempts < 100) {
+        while (!window.SupabaseAPI?.initialized && attempts < 50) {
             await new Promise(resolve => setTimeout(resolve, 100));
             attempts++;
-            if (attempts % 10 === 0) {
-                console.log(`⏳ Tentative ${attempts}/100...`);
-            }
         }
-        
+
         if (!window.supabaseClient) {
-            console.error('❌ Impossible de charger Supabase après 10 secondes');
-            this.showError('Erreur de configuration Supabase');
-            return;
+            throw new Error('Client Supabase non initialisé après 5 secondes');
         }
         
-        console.log('✅ Client Supabase trouvé');
         this.supabase = window.supabaseClient;
-        this.init();
+        console.log('✅ Client Supabase récupéré');
+        
+        this.initialized = true;
+        await this.init();
     }
 
     showError(message) {
@@ -39,42 +40,44 @@ class AuthManager {
 
     async init() {
         console.log('🚀 Initialisation de l\'authentification...');
-        
+
         try {
-            const { data: { session }, error } = await this.supabase.auth.getSession();
-            
-            if (error) {
-                console.error('❌ Erreur lors de la récupération de la session:', error);
-                throw error;
+            if (!this.supabase?.auth) {
+                throw new Error('Client Supabase non initialisé');
             }
-            
-            if (session) {
-                console.log('✅ Session existante trouvée pour:', session.user.email);
-                this.currentUser = session.user;
-                this.redirectToAdmin();
+
+            // Sur la page de login, ne pas rediriger
+            if (window.location.pathname.includes('login.html')) {
+                console.log('📝 Page de login - pas de redirection');
+                this.setupLoginForm();
                 return;
             }
-            
-            console.log('ℹ️ Aucune session existante');
 
-            this.supabase.auth.onAuthStateChange((event, session) => {
-                console.log('🔄 Changement d\'état auth:', event);
-                if (event === 'SIGNED_IN') {
-                    this.currentUser = session.user;
-                    console.log('✅ Connexion réussie pour:', session.user.email);
-                    this.redirectToAdmin();
-                } else if (event === 'SIGNED_OUT') {
-                    this.currentUser = null;
-                    console.log('👋 Déconnexion');
-                    this.redirectToLogin();
-                }
-            });
+            // Pour les autres pages, vérifier la session
+            console.log('🔍 Vérification de la session...');
+            const { data: { session }, error } = await this.supabase.auth.getSession();
 
-            this.setupLoginForm();
-            
+            if (error) throw error;
+
+            if (!session) {
+                console.log('❌ Aucune session active');
+                this.redirectToLogin();
+                return;
+            }
+
+            const hasPermission = await this.checkAdminPermissions(session.user);
+            if (hasPermission) {
+                console.log('✅ Session admin valide pour:', session.user.email);
+                this.currentUser = session.user;
+            } else {
+                console.log('❌ Permissions insuffisantes');
+                await this.supabase.auth.signOut();
+                this.redirectToLogin();
+            }
+
         } catch (error) {
-            console.error('❌ Erreur lors de l\'initialisation:', error);
-            this.showError('Erreur d\'initialisation: ' + error.message);
+            console.error('❌ Erreur d\'initialisation:', error);
+            this.showError(error.message);
         }
     }
 
@@ -82,209 +85,337 @@ class AuthManager {
         const loginForm = document.getElementById('loginForm');
         if (!loginForm) return;
 
+        // Éviter les doubles événements
+        if (loginForm.hasAttribute('data-initialized')) {
+            return;
+        }
+
+        if (!this.supabase) {
+            console.log('⏳ Attente de l\'initialisation de Supabase...');
+            setTimeout(() => this.setupLoginForm(), 100);
+            return;
+        }
+
+        console.log('🔧 Configuration du formulaire de login');
+        loginForm.setAttribute('data-initialized', 'true');
+
+        // Activer le formulaire une fois Supabase prêt
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            console.log('✅ Bouton de connexion activé');
+        }
+
+        loginForm.style.opacity = '1';
+
+        // Configuration du formulaire
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             await this.handleLogin();
         });
+
+        // Gestionnaire de touche Entrée sur les champs
+        const inputs = loginForm.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.handleLogin();
+                }
+            });
+        });
+
+        console.log('✅ Formulaire de login configuré');
     }
 
     async handleLogin() {
+        console.group('🔐 Procédure de connexion');
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const errorMessage = document.getElementById('errorMessage');
         const loadingMessage = document.getElementById('loadingMessage');
         const loginBtn = document.getElementById('loginBtn');
 
-        errorMessage.style.display = 'none';
-        loadingMessage.style.display = 'block';
-        loginBtn.disabled = true;
-
         try {
-            const { data, error } = await this.supabase.auth.signInWithPassword({
+            console.log('1. Préparation de la connexion...');
+            console.log('- Email:', email);
+            console.log('- Client Supabase:', window.supabaseClient ? '✓ Disponible' : '❌ Non disponible');
+            console.log('- SupabaseAPI:', window.SupabaseAPI ? '✓ Disponible' : '❌ Non disponible');
+            console.log('- API initialisée:', window.SupabaseAPI?.initialized ? '✓ Oui' : '❌ Non');
+            
+            errorMessage.style.display = 'none';
+            loadingMessage.style.display = 'block';
+            loadingMessage.textContent = 'Connexion en cours...';
+            loginBtn.disabled = true;
+
+            // Vérifier que Supabase est disponible
+            if (!window.SupabaseAPI?.initialized || !window.supabaseClient) {
+                throw new Error('Client Supabase non initialisé');
+            }
+
+            // Tenter la connexion
+            console.log('🔑 Tentative de connexion pour:', email);
+            
+            // Utiliser le client global
+            const { data, error } = await window.supabaseClient.auth.signInWithPassword({
                 email: email,
                 password: password
             });
 
-            if (error) {
-                throw error;
+            if (error) throw error;
+
+            if (!data?.user) {
+                throw new Error('Erreur de connexion: aucun utilisateur retourné');
             }
 
-            if (await this.checkAdminPermissions(data.user)) {
-                console.log('✅ Connexion administrateur réussie');
-            } else {
-                await this.supabase.auth.signOut();
-                throw new Error('Accès non autorisé. Vous n\'avez pas les permissions administrateur.');
+            console.log('✅ Connexion réussie pour:', data.user.email);
+            console.log('🔍 Vérification des permissions...');
+            
+            const hasPermission = await this.checkAdminPermissions(data.user);
+            if (!hasPermission) {
+                console.log('❌ Permissions insuffisantes');
+                await window.supabaseClient.auth.signOut();
+                throw new Error('Accès non autorisé');
             }
+
+            console.log('✅ Permissions validées');
+            
+            // Vérifier que la session est bien établie
+            const { data: { session }, error: sessionError } = 
+                await window.supabaseClient.auth.getSession();
+            
+            if (sessionError || !session) {
+                throw new Error('Session non établie après connexion');
+            }
+            
+            console.log('✅ Session établie:', session);
+            loadingMessage.textContent = 'Connexion réussie, redirection...';
+            
+            // Sauvegarder la session dans localStorage pour la retrouver après redirection
+            localStorage.setItem('adminSession', JSON.stringify({
+                timestamp: Date.now(),
+                email: data.user.email
+            }));
+            
+            this.redirectToAdmin();
 
         } catch (error) {
             console.error('❌ Erreur de connexion:', error);
-            
-            let errorText = 'Erreur de connexion';
-            if (error.message.includes('Invalid login credentials')) {
-                errorText = 'Email ou mot de passe incorrect';
-            } else if (error.message.includes('non autorisé')) {
-                errorText = error.message;
-            } else if (error.message.includes('Email not confirmed')) {
-                errorText = 'Veuillez confirmer votre email avant de vous connecter';
-            }
-
-            errorMessage.textContent = errorText;
+            errorMessage.textContent = error.message === 'Invalid login credentials'
+                ? 'Email ou mot de passe incorrect'
+                : error.message;
             errorMessage.style.display = 'block';
-        } finally {
-            loadingMessage.style.display = 'none';
             loginBtn.disabled = false;
+            loadingMessage.style.display = 'none';
         }
     }
 
     async checkAdminPermissions(user) {
         try {
-            console.log('🔍 Vérification des permissions pour:', user.email);
-            
-            const adminEmails = [
-                'admin@orangedigitalcenter.ma',
-                'backoffice@odc.ma',
-                user.email // TEMPORAIRE: autoriser l'email connecté pour les tests
-            ];
-            
-            if (adminEmails.includes(user.email)) {
-                console.log('✅ Email autorisé:', user.email);
-                return true;
+            if (!user?.email) return false;
+
+            // En mode développement, autoriser certains emails de test
+            if (window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1') {
+                const devEmails = [
+                    'admin@localhost',
+                    'admin@odc.local',
+                    'test@localhost'
+                ];
+                if (devEmails.includes(user.email.toLowerCase())) {
+                    return true;
+                }
             }
 
-            /*
-            const { data, error } = await this.supabase
-                .from('admin_users')
-                .select('id, role')
-                .eq('email', user.email)
-                .eq('active', true)
-                .single();
-
-            if (error && error.code !== 'PGRST116') { // PGRST116 = pas de résultat
-                console.warn('Erreur lors de la vérification admin:', error);
+            // En production, autoriser uniquement les emails vérifiés
+            if (!user.email_confirmed_at) {
+                console.log('❌ Email non vérifié:', user.email);
                 return false;
             }
 
-            return data !== null;
-            */
-            
-            return false;
+            const adminEmails = [
+                'admin@orangedigitalcenter.ma',
+                'backoffice@odc.ma',
+                'admin@odc.ma',
+                'hamza.elhamdani@orange.com',
+                'el.hamza.hamdani@gmail.com',
+                'sanaa.bellali@orange.com',
+                'sanaa.bellaliz@orange.com'
+            ];
+
+            const isAdmin = adminEmails.includes(user.email.toLowerCase());
+            if (!isAdmin) {
+                console.log('❌ Email non autorisé:', user.email);
+            }
+            return isAdmin;
 
         } catch (error) {
-            console.error('Erreur lors de la vérification des permissions:', error);
+            console.error('❌ Erreur permissions:', error);
             return false;
         }
     }
 
     redirectToAdmin() {
-        if (window.location.pathname.includes('login.html')) {
-            window.location.href = 'index.html';
+        try {
+            console.group('🔄 Processus de redirection');
+            console.log('1. État initial:');
+            console.log('- URL complète:', window.location.href);
+            console.log('- Protocole:', window.location.protocol);
+            console.log('- Hôte:', window.location.host);
+            console.log('- Chemin:', window.location.pathname);
+            console.log('- Origine:', window.location.origin);
+            
+            // 1. Décomposer l'URL actuelle
+            const currentUrl = new URL(window.location.href);
+            console.log('\n2. Analyse URL actuelle:');
+            console.log('- URL parsée:', currentUrl.toString());
+            console.log('- Pathname:', currentUrl.pathname);
+            console.log('- Search params:', currentUrl.search);
+            console.log('- Hash:', currentUrl.hash);
+            
+            // 2. Construire la nouvelle URL
+            let redirectUrl;
+            
+            if (currentUrl.pathname.includes('/admin/')) {
+                console.log('\n3a. Cas: Déjà dans /admin/');
+                // Si nous sommes déjà dans le dossier admin
+                redirectUrl = new URL('index.html', currentUrl);
+                console.log('- URL relative construite: index.html');
+            } else {
+                console.log('\n3b. Cas: Hors /admin/');
+                // Si nous ne sommes pas dans le dossier admin
+                redirectUrl = new URL('admin/index.html', currentUrl);
+                console.log('- URL relative construite: admin/index.html');
+            }
+            
+            console.log('\n4. URL finale:');
+            console.log('- URL complète:', redirectUrl.toString());
+            console.log('- Pathname:', redirectUrl.pathname);
+            
+            // 3. Vérifier que l'URL est accessible
+            console.log('\n5. Vérification accessibilité...');
+            fetch(redirectUrl.toString(), { method: 'HEAD' })
+                .then(response => {
+                    console.log('- Statut réponse:', response.status);
+                    console.log('- Headers:', Object.fromEntries(response.headers));
+                    if (response.ok) {
+                        console.log('✅ URL accessible - Redirection dans 100ms');
+                        // Redirection avec un petit délai pour voir les logs
+                        setTimeout(() => {
+                            console.log('🔄 Exécution redirection vers:', redirectUrl.toString());
+                            window.location.href = redirectUrl.toString();
+                        }, 100);
+                    } else {
+                        throw new Error(`URL inaccessible (${response.status})`);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Erreur vérification URL:', error);
+                    this.fallbackRedirect();
+                });
+            
+        } catch (error) {
+            console.error('❌ Erreur lors de la construction de l\'URL:', error);
+            this.fallbackRedirect();
+        }
+    }
+
+    fallbackRedirect() {
+        console.log('⚠️ Tentative de redirection alternative...');
+        
+        // Essayer différentes approches
+        const attempts = [
+            () => window.location.href.replace('login.html', 'index.html'),
+            () => window.location.origin + window.location.pathname.replace('login.html', 'index.html'),
+            () => './index.html',
+            () => '../admin/index.html'
+        ];
+        
+        for (const attempt of attempts) {
+            try {
+                const url = attempt();
+                console.log('🎯 Tentative avec URL:', url);
+                
+                fetch(url, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('✅ URL alternative valide trouvée');
+                            window.location.href = url;
+                            return;
+                        }
+                    })
+                    .catch(() => {
+                        console.log('❌ URL alternative non accessible');
+                    });
+            } catch (e) {
+                console.log('❌ Erreur lors de la tentative:', e);
+            }
         }
     }
 
     redirectToLogin() {
         if (!window.location.pathname.includes('login.html')) {
-            window.location.href = 'login.html';
+            const currentPath = window.location.pathname;
+            const basePath = currentPath.substring(0, currentPath.indexOf('/admin/') + 7);
+            window.location.replace(window.location.origin + basePath + 'login.html');
         }
     }
 
     async logout() {
         try {
-            const { error } = await this.supabase.auth.signOut();
-            if (error) throw error;
-            console.log('✅ Déconnexion réussie');
+            await this.supabase?.auth.signOut();
+            this.currentUser = null;
+            this.redirectToLogin();
         } catch (error) {
-            console.error('❌ Erreur de déconnexion:', error);
+            console.error('❌ Erreur déconnexion:', error);
         }
     }
 
     async requireAuth() {
         try {
-            console.log('🔐 Vérification de l\'authentification requise...');
-            
             if (!this.supabase) {
-                console.error('❌ Client Supabase non disponible');
-                this.redirectToLogin();
-                return false;
-            }
-            
-            const { data: { session }, error } = await this.supabase.auth.getSession();
-            
-            if (error) {
-                console.error('❌ Erreur lors de la récupération de la session:', error);
-                this.redirectToLogin();
-                return false;
-            }
-            
-            if (!session || !session.user) {
-                console.log('❌ Aucune session utilisateur trouvée');
-                this.redirectToLogin();
-                return false;
+                throw new Error('Client Supabase non disponible');
             }
 
-            console.log('✅ Session trouvée pour:', session.user.email);
+            const { data: { session }, error } = await this.supabase.auth.getSession();
+            if (error) throw error;
+
+            if (!session?.user) {
+                console.log('❌ Session invalide');
+                this.redirectToLogin();
+                return false;
+            }
 
             const hasPermission = await this.checkAdminPermissions(session.user);
             if (!hasPermission) {
-                console.log('❌ Permissions insuffisantes pour:', session.user.email);
+                console.log('❌ Permissions insuffisantes');
                 await this.supabase.auth.signOut();
                 this.redirectToLogin();
                 return false;
             }
 
-            console.log('✅ Permissions admin validées pour:', session.user.email);
             this.currentUser = session.user;
             return true;
-            
+
         } catch (error) {
-            console.error('❌ Erreur lors de la vérification auth:', error);
+            console.error('❌ Erreur auth:', error);
             this.redirectToLogin();
             return false;
         }
     }
 }
 
+// Instance globale
 const authManager = new AuthManager();
+window.authManager = authManager;
 
+// Protection des pages admin
 async function protectAdminPage() {
     const isAuthenticated = await authManager.requireAuth();
-    if (!isAuthenticated) {
-        return false;
+    if (isAuthenticated) {
+        console.log('✅ Page protégée - accès autorisé');
     }
-    
-    addLogoutButton();
-    return true;
+    return isAuthenticated;
 }
 
-function addLogoutButton() {
-    const header = document.querySelector('.admin-header');
-    if (header && !document.getElementById('logoutBtn')) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.id = 'logoutBtn';
-        logoutBtn.className = 'logout-btn';
-        logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Déconnexion';
-        logoutBtn.style.cssText = `
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            z-index: 1000;
-        `;
-        
-        logoutBtn.addEventListener('click', async () => {
-            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                await authManager.logout();
-            }
-        });
-        
-        document.body.appendChild(logoutBtn);
-    }
-}
-
-window.authManager = authManager;
 window.protectAdminPage = protectAdminPage;

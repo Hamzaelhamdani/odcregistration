@@ -17,10 +17,4 @@ Visit our centers in:
 - Casablanca Ben M'sik
 - Casablanca Sidi Maarouf
 
-## Contact
-
-For more information, visit [odc.ma](https://odc.ma)
-
----
-
 © 2025 Orange Digital Center Morocco

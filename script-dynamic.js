@@ -11,50 +11,100 @@ function getCityDisplayName(city) {
     return cityNames[city] || city;
 }
 function getDefaultImage(type, title) {
-    const encodedTitle = encodeURIComponent(title);
-    if (type === 'ecole-du-code') {
-        return `https://via.placeholder.com/400x180/007ACC/FFFFFF?text=${encodedTitle}`;
-    } else if (type === 'fablab') {
-        return `https://via.placeholder.com/400x180/28a745/FFFFFF?text=${encodedTitle}`;
-    } else if (type === 'event') {
-        return `https://via.placeholder.com/400x180/fd7e14/FFFFFF?text=${encodedTitle}`;
-    }
-    return `https://via.placeholder.com/400x180/6c757d/FFFFFF?text=${encodedTitle}`;
+    // On retourne une URL vide - le onerror handler utilisera les placeholders CSS
+    return '';
 }
 async function loadDataFromSupabase() {
     try {
         console.log('🔄 Tentative de chargement depuis Supabase...');
-        if (typeof window.supabase === 'undefined' || typeof supabase === 'undefined') {
-            throw new Error('Supabase non disponible');
-        }
-        const { data: formationsData, error: formationsError } = await supabase
-            .from('formations')
-            .select('*')
-            .eq('status', 'active')
-            .order('date_start', { ascending: true });
-        const { data: eventsData, error: eventsError } = await supabase
-            .from('events')
-            .select('*')
-            .eq('status', 'active')
-            .order('date_start', { ascending: true });
-        if (formationsError) {
-            console.warn('⚠️ Erreur formations Supabase:', formationsError.message);
+        // defensive placeholders so reference errors don't occur if branches change
+        let formationsError = null;
+        let eventsError = null;
+        // Prefer the wrapper API if available (keeps behavior consistent with admin)
+        if (window.SupabaseAPI && typeof window.SupabaseAPI.getFormations === 'function') {
+            console.log('ℹ️ Using SupabaseAPI wrapper to load formations/events');
+            // Ensure the API is initialized before calling
+            let attempts = 0;
+            while (!window.SupabaseAPI.initialized && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+            if (!window.SupabaseAPI.initialized) {
+                console.warn('⚠️ SupabaseAPI not initialized after waiting — attempting anyway');
+            }
+            const formationsData = await window.SupabaseAPI.getFormations().catch(err => {
+                console.error('❌ SupabaseAPI.getFormations failed:', err);
+                return null;
+            });
+            const eventsData = await window.SupabaseAPI.getEvents().catch(err => {
+                console.error('❌ SupabaseAPI.getEvents failed:', err);
+                return null;
+            });
+            // getFormations/getEvents return arrays or null; normalize
+            if (Array.isArray(formationsData)) formations = formationsData.map(f => ({ ...f, _origin: 'supabase' }));
+            if (Array.isArray(eventsData)) events = eventsData.map(e => ({ ...e, _origin: 'supabase' }));
+            console.log('ℹ️ SupabaseAPI returned — formations count:', formations.length, 'events count:', events.length);
+            if (formations.length > 0) console.log('ℹ️ sample formation:', formations[0]);
         } else {
-            formations = formationsData.map(f => ({ ...f, _origin: 'supabase' }));
-            console.log(`✅ ${formations.length} formations chargées depuis Supabase`);
+            if (typeof window.supabase === 'undefined' || typeof supabase === 'undefined') {
+                throw new Error('Supabase non disponible');
+            }
+            // Use explicit result objects to avoid accidental reference errors
+            const formationsRes = await supabase
+                .from('formations')
+                .select('*')
+                .eq('status', 'active')
+                .order('date_start', { ascending: true });
+            const eventsRes = await supabase
+                .from('events')
+                .select('*')
+                .eq('status', 'active')
+                .order('date_start', { ascending: true });
+
+            const formationsData = formationsRes && formationsRes.data ? formationsRes.data : null;
+            const formationsErr = formationsRes && formationsRes.error ? formationsRes.error : null;
+            const eventsData = eventsRes && eventsRes.data ? eventsRes.data : null;
+            const eventsErr = eventsRes && eventsRes.error ? eventsRes.error : null;
+
+            if (formationsErr) {
+                console.warn('⚠️ Erreur formations Supabase:', formationsErr);
+            } else if (formationsData) {
+                formations = formationsData.map(f => ({ ...f, _origin: 'supabase' }));
+            }
+            if (eventsErr) {
+                console.warn('⚠️ Erreur événements Supabase:', eventsErr);
+            } else if (eventsData) {
+                events = eventsData.map(e => ({ ...e, _origin: 'supabase' }));
+            }
         }
-        if (eventsError) {
-            console.warn('⚠️ Erreur événements Supabase:', eventsError.message);
-        } else {
-            events = eventsData.map(e => ({ ...e, _origin: 'supabase' }));
-            console.log(`✅ ${events.length} événements chargés depuis Supabase`);
-        }
+        console.log('ℹ️ Supabase load result — formations:', formations.length, 'events:', events.length);
         return formations.length > 0 || events.length > 0;
     } catch (error) {
-        console.error('❌ Erreur lors du chargement Supabase:', error.message);
+        console.error('❌ Erreur lors du chargement Supabase:', error);
         return false;
     }
 }
+
+// Allow live refresh from admin via window events
+window.addEventListener('formations-changed', async (e) => {
+    console.log('🔁 formations-changed reçu — rafraîchissement du contenu');
+    try {
+        await loadDataFromSupabase();
+        loadContent();
+    } catch (err) {
+        console.warn('⚠️ Impossible de rafraîchir les formations:', err);
+    }
+});
+
+window.addEventListener('events-changed', async (e) => {
+    console.log('🔁 events-changed reçu — rafraîchissement du contenu');
+    try {
+        await loadDataFromSupabase();
+        loadContent();
+    } catch (err) {
+        console.warn('⚠️ Impossible de rafraîchir les événements:', err);
+    }
+});
 function loadFallbackData() {
     console.log('📦 Chargement des données de fallback...');
     formations = [

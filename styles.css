@@ -56,6 +56,13 @@ body {
     border-radius: 2px;
 }
 
+/* SVG logo used on the landing page */
+.site-logo {
+    width: 50px;
+    height: auto;
+    display: block;
+}
+
 .logo-orange-text {
     color: white;
     font-size: 12px;
@@ -923,7 +930,8 @@ body {
 }
 
 .formation-badge.fablab {
-    background: #28a745;
+    /* Use the same orange as École du Code / Orange Fab for visual consistency */
+    background: #FF7900;
 }
 
 .formation-info {
@@ -1179,6 +1187,12 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 2px;
+}
+
+.footer-logo-container .site-logo {
+    width: 40px;
+    height: auto;
+    display: block;
 }
 
 .footer-logo-container .logo-orange-text {

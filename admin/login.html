@@ -8,12 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    <!-- Chargement des scripts -->
+    <!-- 1. Librairie Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
+    <!-- 2. Variables d'environnement -->
     <script src="../env.js"></script>
+    
+    <!-- 3. API Supabase -->
     <script src="../config/supabase.js"></script>
     
+    <!-- 4. Authentification -->
+    <script src="js/auth.js"></script>
     <style>
         .login-container {
             min-height: 100vh;
@@ -98,17 +104,37 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
             margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
         }
         
         .login-btn:hover {
             background: #e66a00;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
         }
         
         .login-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .login-btn i {
+            margin-right: 0.5rem;
+        }
+        
+        .login-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255,121,0,0.4);
         }
         
         .error-message {
@@ -155,18 +181,22 @@
             <div class="error-message" id="errorMessage"></div>
             <div class="loading" id="loadingMessage">Connexion en cours...</div>
             
-            <form id="loginForm">
+            <form id="loginForm" onsubmit="return false;">
                 <div class="form-group">
                     <label for="email" class="form-label">Adresse email</label>
-                    <input type="email" id="email" class="form-input" required placeholder="admin@orangedigitalcenter.ma">
+                    <input type="email" id="email" class="form-input" required 
+                           placeholder="admin@orangedigitalcenter.ma"
+                           autocomplete="email">
                 </div>
                 
                 <div class="form-group">
                     <label for="password" class="form-label">Mot de passe</label>
-                    <input type="password" id="password" class="form-input" required placeholder="••••••••">
+                    <input type="password" id="password" class="form-input" required 
+                           placeholder="••••••••"
+                           autocomplete="current-password">
                 </div>
                 
-                <button type="submit" class="login-btn" id="loginBtn">
+                <button type="submit" class="login-btn" id="loginBtn" disabled>
                     <i class="fas fa-sign-in-alt"></i> Se connecter
                 </button>
             </form>
@@ -177,23 +207,24 @@
             </a>
         </div>
     </div>
-
     
     <script>
-        // Attendre que tout soit chargé avant d'initialiser l'authentification
-        window.addEventListener('load', function() {
-            // Vérifier que Supabase est disponible
-            if (window.supabaseClient) {
-                console.log('✅ Supabase client disponible');
-                // Charger le script d'authentification
-                const script = document.createElement('script');
-                script.src = 'js/auth.js';
-                document.head.appendChild(script);
-            } else {
-                console.error('❌ Supabase client non disponible');
-                document.getElementById('errorMessage').textContent = 'Erreur de configuration Supabase';
-                document.getElementById('errorMessage').style.display = 'block';
-            }
+        // Ajouter un gestionnaire d'erreurs global
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('🚨 Erreur globale:', {
+                message: msg,
+                url: url,
+                line: lineNo,
+                column: columnNo,
+                error: error
+            });
+            return false;
+        };
+
+        // Quand le DOM est chargé
+        document.addEventListener('DOMContentLoaded', function() {
+            // Le formulaire sera configuré automatiquement par AuthManager
+            console.log('✅ DOM chargé - Attente de l\'initialisation...');
         });
     </script>
 </body>
