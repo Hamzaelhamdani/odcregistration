@@ -12,13 +12,16 @@ if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
     exit 1
 fi
 
-# Check if env.js template exists
-if [ ! -f "env.js" ]; then
-    echo "❌ Error: env.js template not found"
+# Check if env.js.template exists
+if [ ! -f "env.js.template" ]; then
+    echo "❌ Error: env.js.template not found"
     exit 1
 fi
 
-echo "📝 Generating env.js with environment variables..."
+echo "📝 Copying template and generating env.js with environment variables..."
+
+# Copy template to env.js
+cp env.js.template env.js
 
 # Replace placeholders in env.js
 sed -i "s|__SUPABASE_URL__|$SUPABASE_URL|g" env.js

@@ -7,11 +7,17 @@ if (-not $env:SUPABASE_URL -or -not $env:SUPABASE_ANON_KEY) {
     exit 1
 }
 
-$envJsPath = Join-Path $PSScriptRoot 'env.js'
-if (-not (Test-Path $envJsPath)) {
-    Write-Error "env.js template not found at $envJsPath"
+$templatePath = Join-Path $PSScriptRoot 'env.js.template'
+if (-not (Test-Path $templatePath)) {
+    Write-Error "env.js.template not found at $templatePath"
     exit 1
 }
+
+$envJsPath = Join-Path $PSScriptRoot 'env.js'
+
+# Copy template to env.js
+Write-Host "📝 Copying template and generating env.js..."
+Copy-Item -Path $templatePath -Destination $envJsPath -Force
 
 # Read template and replace placeholders
 $content = Get-Content -Raw -Path $envJsPath
