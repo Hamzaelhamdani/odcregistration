@@ -390,7 +390,6 @@ function loadContent() {
                     <p class="event-description">${event.description}</p>
                     <button class="inscription-btn" onclick="window.open('${event.registration_link || '#'}', '_blank')">Participer</button>
                 </div>`;
-            `;
         }).join('');
         eventsContainer.innerHTML = eventsHTML;
         console.log('✅ Événements générés');
