@@ -15,8 +15,8 @@ if (-not (Test-Path $envJsPath)) {
 
 # Read template and replace placeholders
 $content = Get-Content -Raw -Path $envJsPath
-$content = $content -replace '<!-- SUPABASE_URL_PLACEHOLDER -->', [System.Text.RegularExpressions.Regex]::Escape($env:SUPABASE_URL)
-$content = $content -replace '<!-- SUPABASE_ANON_KEY_PLACEHOLDER -->', [System.Text.RegularExpressions.Regex]::Escape($env:SUPABASE_ANON_KEY)
+$content = $content -replace '__SUPABASE_URL__', [System.Text.RegularExpressions.Regex]::Escape($env:SUPABASE_URL)
+$content = $content -replace '__SUPABASE_ANON_KEY__', [System.Text.RegularExpressions.Regex]::Escape($env:SUPABASE_ANON_KEY)
 
 # Write to env.js (overwrites template in-place so the result is the generated file)
 Set-Content -Path $envJsPath -Value $content -Encoding UTF8
