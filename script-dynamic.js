@@ -14,6 +14,15 @@ function getDefaultImage(type, title) {
     // On retourne une URL vide - le onerror handler utilisera les placeholders CSS
     return '';
 }
+function formatTime(time) {
+    if (!time || time === 'N/A') return 'N/A';
+    // Si le format est HH:MM:SS, on garde seulement HH:MM
+    if (time.includes(':')) {
+        const parts = time.split(':');
+        return `${parts[0]}:${parts[1]}`;
+    }
+    return time;
+}
 async function loadDataFromSupabase() {
     try {
         console.log('🔄 Tentative de chargement depuis Supabase...');
@@ -282,25 +291,25 @@ function loadContent() {
         const ecoleFormations = formations.filter(f => f.category === 'ecole-du-code');
         console.log('🎓 Formations École du Code:', ecoleFormations.length);
         const formationsHTML = ecoleFormations.map(formation => {
-            const startDate = new Date(formation.date_start);
-            const endDate = new Date(formation.date_end);
+            const startDate = new Date(formation.dateStart || formation.date_start);
+            const endDate = new Date(formation.dateEnd || formation.date_end);
             const dateText = startDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
             const dateRange = startDate.getTime() !== endDate.getTime() ? 
                 ` - ${endDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}` : '';
             const cityName = getCityDisplayName(formation.city);
             const imageUrl = formation.image || getDefaultImage('ecole-du-code', formation.title);
-            const timeStart = formation.timeStart || formation.time_start || 'N/A';
-            const timeEnd = formation.timeEnd || formation.time_end || 'N/A';
+            const timeStart = formatTime(formation.timeStart || formation.time_start || 'N/A');
+            const timeEnd = formatTime(formation.timeEnd || formation.time_end || 'N/A');
             const currentPart = formation.currentParticipants || formation.current_participants || 0;
             const maxPart = formation.maxParticipants || formation.max_participants || 'N/A';
             return `
                 <div class="formation-card fade-in" data-city="${formation.city}">
                     <div class="formation-image">
                         <img src="${imageUrl}" alt="${formation.title}" onerror="this.src='${getDefaultImage('ecole-du-code', formation.title)}'">
+                        <span class="formation-badge ecole-du-code">École du Code</span>
                     </div>
                     <div class="card-header">
                         <h4 class="formation-title">${formation.title}</h4>
-                        <span class="formation-badge ecole-du-code">École du Code</span>
                     </div>
                     <div class="formation-info">
                         <p class="formation-date"><i class="fas fa-calendar"></i> ${dateText}${dateRange}</p>
@@ -321,25 +330,25 @@ function loadContent() {
         const fablabFormations = formations.filter(f => f.category === 'fablab');
         console.log('🔧 Formations FabLab:', fablabFormations.length);
         const fablabHTML = fablabFormations.map(formation => {
-            const startDate = new Date(formation.date_start);
-            const endDate = new Date(formation.date_end);
+            const startDate = new Date(formation.dateStart || formation.date_start);
+            const endDate = new Date(formation.dateEnd || formation.date_end);
             const dateText = startDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
             const dateRange = startDate.getTime() !== endDate.getTime() ? 
                 ` - ${endDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}` : '';
             const cityName = getCityDisplayName(formation.city);
             const imageUrl = formation.image || getDefaultImage('fablab', formation.title);
-            const timeStart = formation.timeStart || formation.time_start || 'N/A';
-            const timeEnd = formation.timeEnd || formation.time_end || 'N/A';
+            const timeStart = formatTime(formation.timeStart || formation.time_start || 'N/A');
+            const timeEnd = formatTime(formation.timeEnd || formation.time_end || 'N/A');
             const currentPart = formation.currentParticipants || formation.current_participants || 0;
             const maxPart = formation.maxParticipants || formation.max_participants || 'N/A';
             return `
                 <div class="formation-card fade-in" data-city="${formation.city}">
                     <div class="formation-image">
                         <img src="${imageUrl}" alt="${formation.title}" onerror="this.src='${getDefaultImage('fablab', formation.title)}'">
+                        <span class="formation-badge fablab">FabLab</span>
                     </div>
                     <div class="card-header">
                         <h4 class="formation-title">${formation.title}</h4>
-                        <span class="formation-badge fablab">FabLab</span>
                     </div>
                     <div class="formation-info">
                         <p class="formation-date"><i class="fas fa-calendar"></i> ${dateText}${dateRange}</p>
@@ -359,27 +368,22 @@ function loadContent() {
     if (eventsContainer) {
         console.log('🎪 Événements:', events.length);
         const eventsHTML = events.map(event => {
-            const startDate = new Date(event.date_start);
+            const startDate = new Date(event.dateStart || event.date_start);
             const dateText = startDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
             const cityName = getCityDisplayName(event.city);
             const imageUrl = event.image || getDefaultImage('event', event.title);
-            return `
-                const cityName = getCityDisplayName(event.city);
-            const imageUrl = event.image || getDefaultImage('event', event.title);
-            const timeStart = event.timeStart || event.time_start || 'N/A';
-            const timeEnd = event.timeEnd || event.time_end || 'N/A';
+            const timeStart = formatTime(event.timeStart || event.time_start || 'N/A');
+            const timeEnd = formatTime(event.timeEnd || event.time_end || 'N/A');
             const currentPart = event.currentParticipants || event.current_participants || 0;
             const maxPart = event.maxParticipants || event.max_participants || 'N/A';
             return `
                 <div class="event-card fade-in" data-city="${event.city}">
                     <div class="event-image">
                         <img src="${imageUrl}" alt="${event.title}" onerror="this.src='${getDefaultImage('event', event.title)}'">
+                        <span class="event-badge orange-fab">Orange Fab</span>
                     </div>
                     <div class="card-header">
-                        <div class="event-header-row">
-                            <h4 class="event-title">${event.title}</h4>
-                            <span class="event-badge orange-fab">Orange Fab</span>
-                        </div>
+                        <h4 class="event-title">${event.title}</h4>
                     </div>
                     <div class="event-info">
                         <p class="event-date"><i class="fas fa-calendar"></i> ${dateText}</p>
