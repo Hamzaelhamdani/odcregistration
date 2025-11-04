@@ -1,0 +1,6 @@
+{
+  "buildCommand": "node netlify-build.js",
+  "outputDirectory": ".",
+  "installCommand": "npm install",
+  "framework": null
+}
