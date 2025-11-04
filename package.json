@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Orange Digital Center - Formations & Events Platform",
   "scripts": {
-    "build": "node netlify-build.js"
+    "build": "node vercel-build.js"
   },
   "author": "Orange Digital Center Morocco",
   "license": "UNLICENSED",

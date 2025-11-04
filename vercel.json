@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node netlify-build.js",
+  "buildCommand": "node vercel-build.js",
   "outputDirectory": ".",
   "installCommand": "npm install",
   "framework": null
