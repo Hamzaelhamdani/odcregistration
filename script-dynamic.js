@@ -289,6 +289,10 @@ function loadContent() {
                 ` - ${endDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}` : '';
             const cityName = getCityDisplayName(formation.city);
             const imageUrl = formation.image || getDefaultImage('ecole-du-code', formation.title);
+            const timeStart = formation.timeStart || formation.time_start || 'N/A';
+            const timeEnd = formation.timeEnd || formation.time_end || 'N/A';
+            const currentPart = formation.currentParticipants || formation.current_participants || 0;
+            const maxPart = formation.maxParticipants || formation.max_participants || 'N/A';
             return `
                 <div class="formation-card fade-in" data-city="${formation.city}">
                     <div class="formation-image">
@@ -300,9 +304,9 @@ function loadContent() {
                     </div>
                     <div class="formation-info">
                         <p class="formation-date"><i class="fas fa-calendar"></i> ${dateText}${dateRange}</p>
-                        <p class="formation-time"><i class="fas fa-clock"></i> ${formation.time_start} - ${formation.time_end}</p>
+                        <p class="formation-time"><i class="fas fa-clock"></i> ${timeStart} - ${timeEnd}</p>
                         <p class="formation-location"><i class="fas fa-map-marker-alt"></i> ${cityName}</p>
-                        <p class="formation-participants"><i class="fas fa-users"></i> ${formation.current_participants || 0}/${formation.max_participants || 'N/A'} participants</p>
+                        <p class="formation-participants"><i class="fas fa-users"></i> ${currentPart}/${maxPart} participants</p>
                     </div>
                     <p class="formation-description">${formation.description}</p>
                     <button class="inscription-btn" onclick="window.open('${formation.registration_link || '#'}', '_blank')">S'inscrire</button>
@@ -324,6 +328,10 @@ function loadContent() {
                 ` - ${endDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long' })}` : '';
             const cityName = getCityDisplayName(formation.city);
             const imageUrl = formation.image || getDefaultImage('fablab', formation.title);
+            const timeStart = formation.timeStart || formation.time_start || 'N/A';
+            const timeEnd = formation.timeEnd || formation.time_end || 'N/A';
+            const currentPart = formation.currentParticipants || formation.current_participants || 0;
+            const maxPart = formation.maxParticipants || formation.max_participants || 'N/A';
             return `
                 <div class="formation-card fade-in" data-city="${formation.city}">
                     <div class="formation-image">
@@ -335,9 +343,9 @@ function loadContent() {
                     </div>
                     <div class="formation-info">
                         <p class="formation-date"><i class="fas fa-calendar"></i> ${dateText}${dateRange}</p>
-                        <p class="formation-time"><i class="fas fa-clock"></i> ${formation.time_start} - ${formation.time_end}</p>
+                        <p class="formation-time"><i class="fas fa-clock"></i> ${timeStart} - ${timeEnd}</p>
                         <p class="formation-location"><i class="fas fa-map-marker-alt"></i> ${cityName}</p>
-                        <p class="formation-participants"><i class="fas fa-users"></i> ${formation.current_participants || 0}/${formation.max_participants || 'N/A'} participants</p>
+                        <p class="formation-participants"><i class="fas fa-users"></i> ${currentPart}/${maxPart} participants</p>
                     </div>
                     <p class="formation-description">${formation.description}</p>
                     <button class="inscription-btn" onclick="window.open('${formation.registration_link || '#'}', '_blank')">S'inscrire</button>
@@ -356,6 +364,13 @@ function loadContent() {
             const cityName = getCityDisplayName(event.city);
             const imageUrl = event.image || getDefaultImage('event', event.title);
             return `
+                const cityName = getCityDisplayName(event.city);
+            const imageUrl = event.image || getDefaultImage('event', event.title);
+            const timeStart = event.timeStart || event.time_start || 'N/A';
+            const timeEnd = event.timeEnd || event.time_end || 'N/A';
+            const currentPart = event.currentParticipants || event.current_participants || 0;
+            const maxPart = event.maxParticipants || event.max_participants || 'N/A';
+            return `
                 <div class="event-card fade-in" data-city="${event.city}">
                     <div class="event-image">
                         <img src="${imageUrl}" alt="${event.title}" onerror="this.src='${getDefaultImage('event', event.title)}'">
@@ -368,13 +383,13 @@ function loadContent() {
                     </div>
                     <div class="event-info">
                         <p class="event-date"><i class="fas fa-calendar"></i> ${dateText}</p>
-                        <p class="event-time"><i class="fas fa-clock"></i> ${event.time_start} - ${event.time_end}</p>
+                        <p class="event-time"><i class="fas fa-clock"></i> ${timeStart} - ${timeEnd}</p>
                         <p class="event-location"><i class="fas fa-map-marker-alt"></i> ${cityName}</p>
-                        <p class="event-participants"><i class="fas fa-users"></i> ${event.current_participants || 0}/${event.max_participants || 'N/A'} participants</p>
+                        <p class="event-participants"><i class="fas fa-users"></i> ${currentPart}/${maxPart} participants</p>
                     </div>
                     <p class="event-description">${event.description}</p>
                     <button class="inscription-btn" onclick="window.open('${event.registration_link || '#'}', '_blank')">Participer</button>
-                </div>
+                </div>`;
             `;
         }).join('');
         eventsContainer.innerHTML = eventsHTML;
