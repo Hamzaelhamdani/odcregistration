@@ -1,38 +1,74 @@
-#!/bin/bash#!/bin/bash
+#!/bin/bash#!/bin/bash#!/bin/bash
+
+# build.sh - Build script for Netlify
 
 # build.sh - Script de build pour Netlify# build.sh - Build script for Netlify
 
-# This script injects environment variables into env.js at build time
-
 set -e
 
-set -e  # Exit on error
-
-echo "🔧 Génération de env.js..."
+# This script injects environment variables into env.js at build time
 
 echo "🔧 Starting build process..."
 
-# Vérifier que les variables sont définies
+set -e
 
-if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then# Check if environment variables are set
+# Check if environment variables are set
 
-    echo "❌ Erreur: Variables SUPABASE_URL et SUPABASE_ANON_KEY manquantes"if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; thenset -e  # Exit on error
 
-    exit 1    echo "❌ Error: SUPABASE_URL and SUPABASE_ANON_KEY must be set in Netlify environment variables"
+    echo "❌ Error: SUPABASE_URL and SUPABASE_ANON_KEY must be set"
 
-fi    exit 1
+    exit 1echo "🔧 Génération de env.js..."
 
 fi
 
-# Générer env.js depuis le template
+echo "🔧 Starting build process..."
 
-cat > env.js << EOFecho "📝 Generating env.js with environment variables..."
+echo "📝 Generating env.js..."
+
+# Vérifier que les variables sont définies
+
+# Create env.js with environment variables
+
+cat > env.js << 'EOF'if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then# Check if environment variables are set
 
 (function() {
 
-    "use strict";# Create env.js directly with the environment variables
+    "use strict";    echo "❌ Erreur: Variables SUPABASE_URL et SUPABASE_ANON_KEY manquantes"if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
 
-    window.ENV = {cat > env.js << EOF
+    window.ENV = {
+
+        SUPABASE_URL: 'PLACEHOLDER_URL',    exit 1    echo "❌ Error: SUPABASE_URL and SUPABASE_ANON_KEY must be set in Netlify environment variables"
+
+        SUPABASE_ANON_KEY: 'PLACEHOLDER_KEY'
+
+    };fi    exit 1
+
+    console.log('🔧 Configuration loaded:', {
+
+        url: window.ENV.SUPABASE_URL,fi
+
+        hasKey: !!window.ENV.SUPABASE_ANON_KEY
+
+    });# Générer env.js depuis le template
+
+})();
+
+EOFcat > env.js << EOFecho "📝 Generating env.js with environment variables..."
+
+
+
+# Replace placeholders with actual values(function() {
+
+sed -i "s|PLACEHOLDER_URL|$SUPABASE_URL|g" env.js
+
+sed -i "s|PLACEHOLDER_KEY|$SUPABASE_ANON_KEY|g" env.js    "use strict";# Create env.js directly with the environment variables
+
+
+
+echo "✅ env.js generated successfully"    window.ENV = {cat > env.js << EOF
+
+echo "✅ Build completed"
 
         SUPABASE_URL: '$SUPABASE_URL',/*
 
