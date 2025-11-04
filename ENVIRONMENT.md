@@ -11,9 +11,15 @@ Les clés Supabase ne doivent **JAMAIS** être committées sur GitHub. Elles son
 3. Ajoutez les variables suivantes :
 
 ```
-SUPABASE_URL=https://vlsgynppildehnhptjzf.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsc2d5bnBwaWxkZWhuaHB0anpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNDYwMDAsImV4cCI6MjA3NTkyMjAwMH0.xI2R07fvoBvIGOl3KP6deb4-LhilhV0qChrF6oxI1r4
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
+
+**Où trouver ces valeurs?**
+- Allez sur [supabase.com](https://supabase.com)
+- Ouvrez votre projet
+- Allez dans Settings → API
+- Copiez l'URL du projet et la clé "anon public"
 
 ## 💻 Développement Local
 
@@ -21,8 +27,8 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 1. Assurez-vous que le fichier `.env` existe avec vos clés :
 ```env
-SUPABASE_URL=https://vlsgynppildehnhptjzf.supabase.co
-SUPABASE_ANON_KEY=votre_anon_key_ici
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key_here
 ```
 
 2. Exécutez le script de build :
@@ -55,8 +61,8 @@ Créez un fichier `env.js` avec vos vraies clés :
 (function() {
     "use strict";
     window.ENV = {
-        SUPABASE_URL: 'https://vlsgynppildehnhptjzf.supabase.co',
-        SUPABASE_ANON_KEY: 'votre_anon_key_ici'
+        SUPABASE_URL: 'https://your-project.supabase.co',
+        SUPABASE_ANON_KEY: 'your_supabase_anon_key_here'
     };
 })();
 ```

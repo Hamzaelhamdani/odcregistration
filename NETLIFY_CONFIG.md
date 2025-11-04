@@ -14,12 +14,12 @@ Ajoutez ces deux variables :
 
 #### Variable 1 : SUPABASE_URL
 - **Key:** `SUPABASE_URL`
-- **Value:** `https://vlsgynppildehnhptjzf.supabase.co`
+- **Value:** `https://your-project.supabase.co` (utilisez votre URL Supabase)
 - **Scopes:** All (Production, Deploy previews, Branch deploys)
 
 #### Variable 2 : SUPABASE_ANON_KEY
 - **Key:** `SUPABASE_ANON_KEY`
-- **Value:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsc2d5bnBwaWxkZWhuaHB0anpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNDYwMDAsImV4cCI6MjA3NTkyMjAwMH0.xI2R07fvoBvIGOl3KP6deb4-LhilhV0qChrF6oxI1r4`
+- **Value:** `your_supabase_anon_key_here` (depuis votre dashboard Supabase → Settings → API)
 - **Scopes:** All (Production, Deploy previews, Branch deploys)
 
 ### 2. Redéployer le Site
@@ -39,7 +39,7 @@ Une fois le déploiement terminé :
 2. Ouvrez la console du navigateur (F12)
 3. Vous devriez voir :
    ```
-   🔧 Variables d'environnement chargées: {url: "https://vlsgynppildehnhptjzf.supabase.co", hasKey: true}
+   🔧 Variables d'environnement chargées: {url: "https://your-project.supabase.co", hasKey: true}
    🚀 Initialisation de Supabase...
    ✅ Supabase initialisé avec succès
    ```
