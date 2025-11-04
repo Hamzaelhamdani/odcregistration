@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/login.html",
+      "destination": "/admin/login.html",
+      "permanent": false
+    },
+    {
+      "source": "/login",
+      "destination": "/admin/login.html",
+      "permanent": false
+    }
+  ],
   "routes": [
     {
       "src": "/admin/login",
