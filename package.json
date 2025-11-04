@@ -1,0 +1,11 @@
+{
+  "name": "odc-formations-events",
+  "version": "1.0.0",
+  "description": "Orange Digital Center - Formations & Events Platform",
+  "scripts": {
+    "build": "node netlify-build.js"
+  },
+  "author": "Orange Digital Center Morocco",
+  "license": "UNLICENSED",
+  "private": true
+}
