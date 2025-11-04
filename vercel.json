@@ -1,6 +1,3 @@
 {
-  "buildCommand": "node vercel-build.js",
-  "outputDirectory": ".",
-  "installCommand": "npm install",
   "framework": null
 }
