@@ -47,3 +47,6 @@ yarn-error.log*
 .cache/
 dist/
 build/
+
+# Fichier généré avec les clés (ne jamais commiter)
+env.js
