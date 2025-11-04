@@ -50,48 +50,7 @@ git clone https://github.com/Hamzaelhamdani/ODCtrainingsandevents.git
 cd ODCtrainingsandevents
 ```
 
-### 2. Configure Environment Variables
-
-Create a `.env` file from the example:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Supabase credentials:
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_supabase_anon_key_here
-```
-
-**Where to find these values:**
-1. Go to [supabase.com](https://supabase.com)
-2. Open your project
-3. Settings → API
-4. Copy the Project URL and "anon public" key
-
-### 3. Generate `env.js`
-
-**On Windows (PowerShell):**
-```powershell
-# Load environment variables
-Get-Content .env | ForEach-Object {
-    if ($_ -match '^([^=]+)=(.*)$') {
-        [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2], 'Process')
-    }
-}
-
-# Run build
-./build.ps1
-```
-
-**On Linux/Mac:**
-```bash
-export $(cat .env | xargs) && ./build.sh
-```
-
-### 4. Run Local Server
+### 2. Run Local Server
 
 ```bash
 # Python 3
@@ -103,47 +62,19 @@ php -S localhost:8000
 
 Visit: `http://localhost:8000`
 
-## 🚀 Deployment on Netlify
+## 🚀 Deployment
 
-### 1. Push to GitHub
+### Manual Deployment
 
-```bash
-git add .
-git commit -m "Your changes"
-git push origin main
-```
-
-### 2. Configure Netlify
-
-1. Connect your GitHub repository to Netlify
-2. Go to **Site settings → Environment variables**
-3. Add these variables:
-   - `SUPABASE_URL` = Your Supabase URL
-   - `SUPABASE_ANON_KEY` = Your Supabase anon key
-
-### 3. Build Settings
-
-- **Build command:** `chmod +x build.sh && ./build.sh`
-- **Publish directory:** `.`
-
-Netlify will automatically:
-- Run the build script
-- Inject environment variables
-- Deploy your site
-
-For detailed instructions, see [NETLIFY_CONFIG.md](NETLIFY_CONFIG.md)
-
-## 📚 Documentation
-
-- **[ENVIRONMENT.md](ENVIRONMENT.md)** - Environment variables setup guide
-- **[NETLIFY_CONFIG.md](NETLIFY_CONFIG.md)** - Netlify deployment guide
+1. Upload all files to your hosting server
+2. Make sure `env.js` is included
+3. Access your site via your domain
 
 ## 🔐 Security
 
-- ⚠️ **Never commit `.env` file or `env.js` with real keys**
-- ✅ Use `.env.example` as a template
-- ✅ Keep sensitive keys in Netlify environment variables
-- ✅ The `env.js` file is gitignored and generated at build time
+- ⚠️ **Never commit `.env` file** (already in .gitignore)
+- ✅ `env.js` contains configuration and is committed for deployment
+- ✅ For production, rotate keys regularly from Supabase dashboard
 
 ## 🏢 Orange Digital Centers
 
