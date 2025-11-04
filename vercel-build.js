@@ -1,5 +1,5 @@
 /**
- * Script de build pour Vercel
+ * Script de build pour Vercel - Version simplifiée
  * Génère le fichier env.js à partir des variables d'environnement Vercel
  */
 
