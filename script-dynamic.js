@@ -302,6 +302,7 @@ function loadContent() {
             const timeEnd = formatTime(formation.timeEnd || formation.time_end || 'N/A');
             const currentPart = formation.currentParticipants || formation.current_participants || 0;
             const maxPart = formation.maxParticipants || formation.max_participants || 'N/A';
+            const registrationLink = formation.registrationLink || formation.registration_link || '#';
             return `
                 <div class="formation-card fade-in" data-city="${formation.city}">
                     <div class="formation-image">
@@ -318,7 +319,7 @@ function loadContent() {
                         <p class="formation-participants"><i class="fas fa-users"></i> ${currentPart}/${maxPart} participants</p>
                     </div>
                     <p class="formation-description">${formation.description}</p>
-                    <button class="inscription-btn" onclick="window.open('${formation.registration_link || '#'}', '_blank')">S'inscrire</button>
+                    <button class="inscription-btn" onclick="window.open('${registrationLink}', '_blank')">S'inscrire</button>
                 </div>
             `;
         }).join('');
@@ -341,6 +342,7 @@ function loadContent() {
             const timeEnd = formatTime(formation.timeEnd || formation.time_end || 'N/A');
             const currentPart = formation.currentParticipants || formation.current_participants || 0;
             const maxPart = formation.maxParticipants || formation.max_participants || 'N/A';
+            const registrationLink = formation.registrationLink || formation.registration_link || '#';
             return `
                 <div class="formation-card fade-in" data-city="${formation.city}">
                     <div class="formation-image">
@@ -357,7 +359,7 @@ function loadContent() {
                         <p class="formation-participants"><i class="fas fa-users"></i> ${currentPart}/${maxPart} participants</p>
                     </div>
                     <p class="formation-description">${formation.description}</p>
-                    <button class="inscription-btn" onclick="window.open('${formation.registration_link || '#'}', '_blank')">S'inscrire</button>
+                    <button class="inscription-btn" onclick="window.open('${registrationLink}', '_blank')">S'inscrire</button>
                 </div>
             `;
         }).join('');
@@ -376,6 +378,7 @@ function loadContent() {
             const timeEnd = formatTime(event.timeEnd || event.time_end || 'N/A');
             const currentPart = event.currentParticipants || event.current_participants || 0;
             const maxPart = event.maxParticipants || event.max_participants || 'N/A';
+            const registrationLink = event.registrationLink || event.registration_link || '#';
             return `
                 <div class="event-card fade-in" data-city="${event.city}">
                     <div class="event-image">
@@ -392,7 +395,7 @@ function loadContent() {
                         <p class="event-participants"><i class="fas fa-users"></i> ${currentPart}/${maxPart} participants</p>
                     </div>
                     <p class="event-description">${event.description}</p>
-                    <button class="inscription-btn" onclick="window.open('${event.registration_link || '#'}', '_blank')">Participer</button>
+                    <button class="inscription-btn" onclick="window.open('${registrationLink}', '_blank')">Participer</button>
                 </div>`;
         }).join('');
         eventsContainer.innerHTML = eventsHTML;
