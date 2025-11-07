@@ -454,6 +454,19 @@ function setupContentFilters() {
             const selectedType = this.getAttribute('data-type');
             console.log('📋 Type de contenu sélectionné:', selectedType);
             applyContentFilter(selectedType);
+            
+            // Rediriger vers la section appropriée
+            if (selectedType === 'formations') {
+                const formationsSection = document.getElementById('formations');
+                if (formationsSection) {
+                    formationsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            } else if (selectedType === 'events') {
+                const eventsSection = document.getElementById('events');
+                if (eventsSection) {
+                    eventsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         });
     });
 }
