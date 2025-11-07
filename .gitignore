@@ -8,6 +8,8 @@ node_modules/
 # Fichiers de configuration locale avec vraies clés
 env-local.js
 config-local.js
+env-config.js
+api/config
 
 # Documentation technique et fichiers de sécurité (ne pas publier)
 *SECURITY*.md
