@@ -9,7 +9,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="env-config.js"></script>
+    <script>
+        // Charger la config selon l'environnement
+        // En production (Vercel): /api/config
+        // En local: env-config.js (si disponible)
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const configScript = document.createElement('script');
+        configScript.src = isLocal ? 'env-config.js' : '/api/config';
+        configScript.onerror = function() {
+            if (!isLocal) {
+                // Si /api/config échoue en prod, essayer env-config.js en fallback
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'env-config.js';
+                document.head.appendChild(fallbackScript);
+            }
+        };
+        document.head.appendChild(configScript);
+    </script>
     <script src="config/supabase.js"></script>
 </head>
 <body>

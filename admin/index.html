@@ -18,7 +18,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     
     <!-- 2. Variables d'environnement -->
-    <script src="../env-config.js"></script>
+    <script>
+        // Charger la config selon l'environnement
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const configScript = document.createElement('script');
+        configScript.src = isLocal ? '../env-config.js' : '/api/config';
+        configScript.onerror = function() {
+            if (!isLocal) {
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = '../env-config.js';
+                document.head.appendChild(fallbackScript);
+            }
+        };
+        document.head.appendChild(configScript);
+    </script>
     
     <!-- 3. API Supabase -->
     <script src="../config/supabase.js"></script>
