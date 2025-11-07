@@ -9,16 +9,16 @@
       "source": "/login",
       "destination": "/admin/login.html",
       "permanent": false
-    }
-  ],
-  "routes": [
-    {
-      "src": "/admin/login",
-      "dest": "/admin/login.html"
     },
     {
-      "src": "/admin",
-      "dest": "/admin/index.html"
+      "source": "/admin/login",
+      "destination": "/admin/login.html",
+      "permanent": false
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html",
+      "permanent": false
     }
   ]
 }
